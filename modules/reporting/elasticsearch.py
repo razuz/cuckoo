@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import logging
+import time
 
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.exceptions import CuckooDependencyError
@@ -48,7 +49,7 @@ class ElasticSearch(Report):
             raise CuckooReportError("Cannot connect to Elasticsearch: %s" % e)
 
     def do_index(self, obj):
-        index = "%s-%d" % (self.index, self.task["id"])
+        index = "%s-%s" % (self.index, str(time.strftime("%Y%m%d")))
 
         try:
             self.es.create(index=index, doc_type=self.type_, body=obj)
