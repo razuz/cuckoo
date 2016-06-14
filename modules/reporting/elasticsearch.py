@@ -103,6 +103,11 @@ class ElasticSearch(Report):
         self.connect()
         self.idx = 0
 
+        calls = {}
+        # Index the API calls.
+        if self.options.get("calls"):
+            calls = self.process_behavior(results)
+        
         # Index target information, the behavioral summary, and
         # VirusTotal results.
         self.do_index({
@@ -110,7 +115,3 @@ class ElasticSearch(Report):
             "summary": results.get("behavior", {}).get("summary"),
             "virustotal": results.get("virustotal"),
         })
-
-        # Index the API calls.
-        if self.options.get("calls"):
-            self.process_behavior(results)
