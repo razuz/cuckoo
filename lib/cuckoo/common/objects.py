@@ -462,6 +462,11 @@ class File(object):
                 for s in match.strings:
                     strings.add(self._yara_encode_string(s[2]))
 
+                if len(list(strings)) > 10:
+                    log.warning("Truncating strings match for file {0}", self.file_path)
+                    log.debug("SELF : {0}".format(self))
+                    strings = list(strings)[:10]
+
                 results.append({
                     "name": match.rule,
                     "meta": match.meta,
