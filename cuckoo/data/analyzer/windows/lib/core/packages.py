@@ -63,7 +63,7 @@ def choose_package(file_type, file_name, exports):
         return "zip"
     elif file_name.endswith((".py", ".pyc")) or "Python script" in file_type:
         return "python"
-    elif file_name.endswith(".vbs"):
+    elif file_name.endswith(".vbs", ".vbe"):
         return "vbs"
     elif file_name.endswith((".js", ".jse")):
         return "js"
