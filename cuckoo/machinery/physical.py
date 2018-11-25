@@ -7,17 +7,14 @@ import bs4
 import logging
 import re
 import requests
-import socket
 import subprocess
 import time
 import wakeonlan.wol
-import xmlrpclib
 
 from cuckoo.common.abstracts import Machinery
 from cuckoo.common.constants import CUCKOO_GUEST_PORT
 from cuckoo.common.exceptions import CuckooCriticalError
 from cuckoo.common.exceptions import CuckooMachineError
-from cuckoo.common.utils import TimeoutServer
 
 log = logging.getLogger(__name__)
 
@@ -145,19 +142,18 @@ class Physical(Machinery):
         # likely be fairly arbitrary. TODO This is a temporary fix as it is
         # not compatible with the new Cuckoo Agent, but it will have to do.
         url = "http://{0}:{1}".format(machine.ip, CUCKOO_GUEST_PORT)
-        server = TimeoutServer(url, allow_none=True, timeout=60)
 
         try:
-            status = server.get_status()
-        except xmlrpclib.Fault as e:
+            status = requests.get(url, timeout=5)
+            log.debug("Got response from agent: %s", status.content)
+        except (requests.ConnectionError, ValueError) as e:
             # Contacted Agent, but it threw an error.
             log.debug("Agent error: %s (%s) (Error: %s).",
                       machine.id, machine.ip, e)
             return self.ERROR
-        except socket.error as e:
-            # Could not contact agent.
-            log.debug("Agent unresponsive: %s (%s) (Error: %s).",
-                      machine.id, machine.ip, e)
+        except requests.exceptions.Timeout as e:
+            log.debug("Agent timed out : %s (%s) (Error:%s).",
+                machine.id, machine.ip, e)
             return self.STOPPED
         except Exception as e:
             # TODO Handle this better.
@@ -166,7 +162,7 @@ class Physical(Machinery):
 
         # If the agent responded successfully, then the physical machine
         # is running
-        if status:
+        if status.status_code == 200:
             return self.RUNNING
 
         return self.ERROR
